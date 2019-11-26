@@ -16,6 +16,7 @@ setup(
   license = 'LGPL3', 
   description = 'DIT11 Temperature and Humidity Sensor using pigpio',
   long_description = README,
+  long_description_content_type = 'text/markdown',
   author = 'Gary Smart',
   #author_email = 'no_spam@domain.com',
   url = 'https://github.com/garyns/pigpio-dht',

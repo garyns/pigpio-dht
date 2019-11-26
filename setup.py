@@ -12,7 +12,7 @@ except IOError:
 setup(
   name = 'pigpio-dht', 
   packages = ['pigpio_dht'],
-  version = '0.2.1', 
+  version = '0.2.2', 
   license = 'LGPL3', 
   description = 'DIT11 Temperature and Humidity Sensor using pigpio',
   long_description = README,
@@ -26,7 +26,7 @@ setup(
           'pigpio'
       ],
   classifiers=[
-    'Development Status :: 3 - Alpha',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" 
+    'Development Status :: 4 - Beta',  # "3 - Alpha", "4 - Beta" or "5 - Production/Stable" 
     'Intended Audience :: Developers', 
     'Topic :: Software Development :: Libraries :: Python Modules',
     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

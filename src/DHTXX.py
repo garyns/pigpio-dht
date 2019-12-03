@@ -3,13 +3,33 @@ from time import time, sleep
 from datetime import datetime
 import statistics
 
+DEBUG = False
+
+"""
+DHT Sensor Base Constructor
+"""
 class DHTXX:
 
-    DEBUG = False
-    SUCCESS_EDGE_COUNT = 86
-    EXPECTED_DATA_BITS = 40
+    SUCCESS_EDGE_COUNT = 86 # Expected number of edges for a successful sensor communication.
+    EXPECTED_DATA_BITS = 40 # Expected number of data bytes to be returned from the sensor.
 
-    def __init__(self, gpio, pi=None, timeout_secs=0.5, max_read_rate_secs=2, datum_byte_count=1):
+    def __init__(self, gpio, timeout_secs=0.5, use_internal_pullup=True, pi=None, max_read_rate_secs=2, datum_byte_count=1):
+        """
+        Base Constructor.
+
+        :param gpio: BCM Pin of sensor
+        :type gpio: Integer
+        :param timeout_secs: sensor read timeout in seconds
+        :type timeout_secs: integer
+        :param use_internal_pullup: use internal pull-up resistor on data gpio
+        :type use_internal_pullup: boolean
+        :param pi: Custom instance of pigpio.pi()
+        :type pi: pigpio
+        :param max_read_rate_secs: time in seconds between allowed sensor reads.
+        :type max_read_rate_secs: integer
+        :param datum_byte_count: number of bytes used to represent temperature and humidity data for sensor
+        :type datum_byte_count: integer in range 1..2
+        """
         assert(datum_byte_count in (1,2))
 
         self.gpio = gpio
@@ -23,7 +43,8 @@ class DHTXX:
         else:
             self.__pi = pigpio.pi()
 
-        self.__pi.set_pull_up_down(gpio, pigpio.PUD_UP)
+        if use_internal_pullup:
+            self.__pi.set_pull_up_down(gpio, pigpio.PUD_UP)
 
         self.__datum_byte_count = datum_byte_count
         self.__max_read_rate_secs = max_read_rate_secs
@@ -32,11 +53,21 @@ class DHTXX:
         self.__edge_count = -1
         self.__last_read_time = None
 
-        self.__c0 = -1
+        self.__c0 = -1 # timing variables for debugging and testing.
         self.__c1 = -1
 
 
     def read(self, retries=0):
+        """
+        One-shot sensor read.
+        read() will add in a pause if you try and call it more than once per max_read_rate_secs.
+
+        :param retries: number of times to retry when checksum validation fails
+        :type retries: integer
+        :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
+        :rtype: Dictionary
+        :raises TimeoutError: If the sensor on gpio does not respond
+        """
         retries = abs(retries) + 1
 
         for i in range(retries):
@@ -49,6 +80,17 @@ class DHTXX:
 
 
     def sample(self, samples=5, max_retries=None):
+        """
+        Sample sensor and return normalised data.
+
+        :param samples: number of samples to take
+        :type samples: integer
+        :param max_retries: maximum retries per sample before raising exception. Default 2 * samples
+        :type max_retries: integer
+        :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
+        :rtype: Dictionary
+        :raises TimeoutError: If the sensor on gpio does not respond, or max_retries is reached
+        """
         samples = max(2, samples)
 
         if max_retries is None:
@@ -58,12 +100,13 @@ class DHTXX:
         retries = 0
         temperatures = []
         humidities = []
-        initial_result = None
+        initial_result = None  # For debugging and testing results.
 
         while len(temperatures) < samples:
             result = self.read(retries=0)
 
             if (len(temperatures) == 0):
+                # Capture initial result
                 initial_result = result
             
             if result['valid']:
@@ -75,7 +118,7 @@ class DHTXX:
             if retries >= max_retries:
                 raise TimeoutError("Maximum retries of {} reached.".format(max_retries))
 
-        if DHTXX.DEBUG: print("Retries:", retries)
+        __debug("Retries:", retries)
 
         # Temperature
         temp_sd = statistics.stdev(temperatures)
@@ -86,7 +129,7 @@ class DHTXX:
             temperatures_norm = [x for x in temperatures if (x > temp_mean - trim_sd * temp_sd)]
             temperatures_norm = [x for x in temperatures_norm if (x < temp_mean + trim_sd * temp_sd)]
 
-        if DHTXX.DEBUG: print("temps, norm", temperatures, temperatures_norm)
+        __debug("temps, norm", temperatures, temperatures_norm)
 
         temp_mean = statistics.mean(temperatures_norm)
         temp_mode = None
@@ -95,7 +138,7 @@ class DHTXX:
         except:
             pass # no mode.        
         
-        if DHTXX.DEBUG: print("temps, sd, mean, mode =", temperatures, temperatures_norm, temp_sd, temp_mean, temp_mode)
+        __debug("temps, sd, mean, mode =", temperatures, temperatures_norm, temp_sd, temp_mean, temp_mode)
         temp_c = temp_mode if temp_mode else temp_mean
         temp_c = round(temp_c, 1)
 
@@ -108,7 +151,7 @@ class DHTXX:
             humidities_norm = [x for x in humidities if (x > humidity_mean - trim_sd * humidity_sd)]
             humidities_norm = [x for x in humidities_norm if (x < humidity_mean + trim_sd * humidity_sd)]
 
-        if DHTXX.DEBUG: print("humidities, norm", humidities, humidities_norm)
+        __debug("humidities, norm", humidities, humidities_norm)
 
         humidity_mean = statistics.mean(humidities_norm)
         humidity_mode = None
@@ -117,7 +160,7 @@ class DHTXX:
         except:
             pass # no mode.
 
-        if DHTXX.DEBUG: print("humidities, sd, mean, mode =", humidities, humidities_norm, humidity_sd, humidity_mean, humidity_mode)
+        __debug("humidities, sd, mean, mode =", humidities, humidities_norm, humidity_sd, humidity_mean, humidity_mode)
         humidity = humidity_mode if humidity_mode else humidity_mean
         humidity = round(humidity, 1)
 
@@ -125,8 +168,7 @@ class DHTXX:
         temp_f = round(temp_f, 1)
         valid = True # Else would have thrown exception above.
 
-        if DHTXX.DEBUG:
-
+        if DEBUG:
             temp_fixed = initial_result['temp_c'] != temp_c
             humidity_fixed = initial_result['humidity'] != humidity
 
@@ -148,7 +190,8 @@ class DHTXX:
                 'humidity_mean': humidity_mean,
                 'humidity_mode': humidity_mode}            
         else:
-            result = {'temp_c': temp_c,
+            result = {
+                'temp_c': temp_c,
                 'temp_f': temp_f,
                 'humidity': humidity,
                 'valid': valid}
@@ -157,25 +200,22 @@ class DHTXX:
 
 
     def __read(self):
+        """
+        One-Shot read implementation.
+        __read() monitors the read rate self.__max)read_rate_secs and will pause between successive calls.
+        :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
+        :rtype: Dictionary
+        """
 
-        # Throttle reads so we are not reading more than once per self.__max_read_rate_secs 
-#        elapsed_since_last_read = self.__pi.get_current_tick() - self.__last_read_time 
-#         if (elapsed_since_last_read < (self.__max_read_rate_secs * 1000000)):
-#             pause_secs = ((self.__max_read_rate_secs * 1000000) - elapsed_since_last_read) / 1000000
-#             if DHTXX.DEBUG: print("Pausing for secs", pause_secs)
-#             print("Pausing for secs", pause_secs)
-#             sleep(pause_secs)
         # Throttle reads so we are not reading more than once per self.__max_read_rate_secs 
         if (self.__last_read_time): 
             elapsed_since_last_read = (datetime.now() - self.__last_read_time).microseconds / 1000000
             print(elapsed_since_last_read)
             if (elapsed_since_last_read < self.__max_read_rate_secs):
                 pause_secs = self.__max_read_rate_secs - elapsed_since_last_read
-                if DHTXX.DEBUG: print("Pausing for secs", pause_secs)
-                print("Pausing for secs", pause_secs)
+                __debug("Pausing for secs", pause_secs)
                 sleep(pause_secs)
                     
-
         self.__edge_count = 0
         self.read_success = False
         self.sensor_responded = False
@@ -196,11 +236,11 @@ class DHTXX:
         sleep(self.timeout_secs)
         self.__edge_callback_fn.cancel()
 
-        if DHTXX.DEBUG:
+        if DEBUG:
             elapsed_secs = (self.__c1 - self.__c0) / 1000000
-            print("Round Trip Secs:", elapsed_secs)
-            print("Sensor Response?", self.sensor_responded)
-            print("Read Success?", self.read_success)
+            __debug("Round Trip Secs:", elapsed_secs)
+            __debug("Sensor Response?", self.sensor_responded)
+            __debug("Read Success?", self.read_success)
 
         if not self.sensor_responded:
             raise TimeoutError("{} sensor on GPIO {} has not responded in {} seconds. Check sensor connection.".format(self.__class__.__name__, self.gpio, self.timeout_secs))
@@ -210,7 +250,13 @@ class DHTXX:
 
         return self.__parse_data()
 
+
     def __parse_data(self):
+        """
+        Parse data data from sensor into temperature and humidity.
+        :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
+        :rtype: Dictionary
+        """
 
         bytes = []
         byte = 0
@@ -222,23 +268,12 @@ class DHTXX:
                 bytes.append(byte)
                 byte = 0
 
-#        for i in range(0, len(self.data)):
-#            byte = byte << 1
-#            if (self.data[i]):
-#             byte = byte | 1
-#            else:
-#              byte = byte | 0
-#  
-#            if ((i + 1) % 8 == 0):
-#                bytes.append(byte)
-#                byte = 0
-
         valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]
 
-        if DHTXX.DEBUG:
-            print("len(data) =", len(self.data))
-            print("data =", self.data)
-            print("bytes =", bytes)
+        if DEBUG:
+            __debug("len(data) =", len(self.data))
+            __debug("data =", self.data)
+            __debug("bytes =", bytes)
 
         humidity = 0
         temp_c = 0
@@ -271,22 +306,25 @@ class DHTXX:
 
 
     def __edge_callback(self, gpio, level, tick):
+        """
+        pigpio callback handler that monitors GPIO pin and collects sensor response.
+        """
 
-      hl_text = "HIGH" if level == 1 else "LOW"
+        hl_text = "HIGH" if level == 1 else "LOW" # For debugging output.
 
-      if self.__edge_count <= 1:
-          if DHTXX.DEBUG: print(self.__edge_count, "RPI->DHT", "Request Data", hl_text)
+        if self.__edge_count <= 1:
+          __debug(self.__edge_count, "RPI->DHT", "Request Data", hl_text)
 
-      elif self.__edge_count <= 3:
+        elif self.__edge_count <= 3:
           self.sensor_responded = True
-          if DHTXX.DEBUG: print(self.__edge_count, "RPI<-DHT", "Transmission Starting", hl_text)
+          __debug(self.__edge_count, "RPI<-DHT", "Transmission Starting", hl_text)
 
-      elif self.__edge_count <= 4:
+        elif self.__edge_count <= 4:
           # Initial data stream LOW
-          if DHTXX.DEBUG: print(self.__edge_count, "RPI<-DHT", "Data", hl_text)
+          __debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
 
-      elif self.__edge_count <= 84:
-          if DHTXX.DEBUG: print(self.__edge_count, "RPI<-DHT", "Data", hl_text)
+        elif self.__edge_count <= 84:
+          __debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
 
           elapsed = tick - self.__last_tick
           self.__last_tick = tick
@@ -296,15 +334,21 @@ class DHTXX:
               bit = 1 if elapsed >= 70 else 0
               self.data.append(bit)
 
-              if DHTXX.DEBUG: print("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
+              __debug("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
 
-      else:
+        else:
           self.__edge_callback_fn.cancel()
           self.read_success = len(self.data) == DHTXX.EXPECTED_DATA_BITS
           self.__c1 = self.__pi.get_current_tick()
           assert(level == pigpio.HIGH)  # GPIO is high when transmission is complete (sensor 'free' state per datasheet)
           assert(self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT-1)
 
-      self.__last_tick = tick
-      self.__edge_count += 1
+        self.__last_tick = tick
+        self.__edge_count += 1
 
+
+def __debug(**texts):
+    if not DEBUG:
+        return
+
+    print(','.join(texts))

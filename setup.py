@@ -23,7 +23,7 @@ setup(
   url = 'https://github.com/garyns/pigpio-dht',
   download_url = 'https://github.com/garyns/pigpio-dht/archive/master.zip',
   keywords = ['DHT11', 'DHT22', 'pigpio', 'Raspberry Pi', 'RaspberryPi'],
-  install_requires=[ 
+  install_requires = [
           'pigpio'
       ],
   setup_requires = ['wheel'],

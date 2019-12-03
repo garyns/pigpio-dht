@@ -1,4 +1,0 @@
-# https://docs.python.org/3/distutils/commandref.html#sdist-cmd
-
-include *.md
-#global-exclude _*.py

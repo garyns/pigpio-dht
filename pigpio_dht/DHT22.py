@@ -1,10 +1,10 @@
-from DHTXX import DHTXX
+from .DHTXX import DHTXX
 import sys
 
 class DHT22(DHTXX):
      def __init__(self, gpio, timeout_secs=0.5, pi=None):
-         # for DHT22 datum_byte_count = 2
-         super(DHT22, self).__init__(gpio, timeout_secs, pi, datum_byte_count=2)
+         # for DHT22 datum_byte_count = 2, max_read_rate_secs = 2
+         super(DHT22, self).__init__(gpio, pi=pi, timeout_secs=timeout_secs, max_read_rate_secs=2, datum_byte_count=2)
 
 if __name__ == "__main__":
 

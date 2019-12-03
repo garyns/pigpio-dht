@@ -3,7 +3,7 @@ from setuptools import setup
 import os.path
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-README_PATH = os.path.join(HERE, 'README.md')
+README_PATH = os.path.join(HERE, 'README.rst')
 try:
     README = open(README_PATH).read()
 except IOError:
@@ -12,16 +12,17 @@ except IOError:
 setup(
   name = 'pigpio-dht', 
   packages = ['pigpio_dht'],
+  package_dir={'pigpio_dht':'src'},
   version = '0.2.5', 
   license = 'LGPL3', 
   description = 'DIT11 Temperature and Humidity Sensor using pigpio',
   long_description = README,
-  long_description_content_type = 'text/markdown',
+  long_description_content_type = 'text/rst',
   author = 'Gary Smart',
   #author_email = 'no_spam@domain.com',
   url = 'https://github.com/garyns/pigpio-dht',
   download_url = 'https://github.com/garyns/pigpio-dht/archive/master.zip',
-  keywords = ['DHT11', 'DHT22', 'pigpio'],
+  keywords = ['DHT11', 'DHT22', 'pigpio', 'Raspberry Pi', 'RaspberryPi'],
   install_requires=[ 
           'pigpio'
       ],

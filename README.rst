@@ -89,7 +89,7 @@ Code
   sensor = DHT11(gpio)
   #sensor = DHT22(gpio)
 
-  result = sensor.read(samples=5)
+  result = sensor.sample(samples=5)
   print(result)
 
 Output

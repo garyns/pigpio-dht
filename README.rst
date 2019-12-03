@@ -44,7 +44,9 @@ One-Shot Read
 
 Take a single reading from the sensor.
 
-**Code**::
+Code
+^^^^
+::
 
   from pigpio-dit import DHT11, DHT22
 
@@ -56,11 +58,15 @@ Take a single reading from the sensor.
   result = sensor.read()
   print(result)
 
-**Output**::
+Output
+^^^^^^
+::
 
   {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
 
-**Also see**:
+Also see
+^^^^^^^^
+
   `read()`__
 
 __ fn_read_
@@ -71,7 +77,10 @@ Sampled Read
 
 Take many readings (by repeating calling ``read()``) from the sensor and return a normalised result.
 
-**Code**::
+Code
+^^^^
+
+::
 
   from pigpio-dit import DHT11, DHT22
 
@@ -83,11 +92,16 @@ Take many readings (by repeating calling ``read()``) from the sensor and return 
   result = sensor.read(samples=5)
   print(result)
 
-**Output**::
+Output
+^^^^^^
+
+::
 
   {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
 
-**Also see**:
+Also see
+^^^^^^^^
+
   `sample()`__
 
 __ fn_sample_
@@ -100,7 +114,9 @@ The classes ``DHT11`` and ``DHT22`` both extend the base class ``DHTXX`` and sha
 Constructor: DHT11 | DHT22(gpio, timeout_secs=0.5, pi=None)
 ************************************************************
 
-**Parameters:**
+Parameters
+^^^^^^^^^^
+
 - **gpio** GPIO (BCM) pin that data leg of sensor is connected to
 - **timeout_secs** Sensor timeout in second. Default should be adequate unless you receive a TimeoutError advising you to increase the value wuth calling ``read()`` or ``sample()``
 - **pi** a custom instance of ``pigpio.pi()``
@@ -108,7 +124,7 @@ Constructor: DHT11 | DHT22(gpio, timeout_secs=0.5, pi=None)
 .. _fn_read:
 
 read(retries=0) raises TimeoutError
-*****************************************
+************************************
 
 Take a single reading from the sensor.
 
@@ -133,7 +149,9 @@ Where:
 
 Raises
 ^^^^^^
-TimeoutError:
+
+TimeoutError
+""""""""""""
 
 - If the sensor on ``gpio`` does not respond
 - If the sensor responds within ``timeout_secs`` (see _Constructor), but the response cannot be understood by the library. Tey increasing ``timeout_secs``
@@ -156,10 +174,12 @@ Please note that a call to ``sample()`` takes time. For example for the DHT11 wi
 - **samples** number of samples to take
 - **max_retries** maximum number of times to keep retrying *per sample* when the result contains ``valid = False``. Default to samples * 2
 
-**Raises:**
+Raises
+^^^^^^
 
- TimeoutError:
- - Same as for ``read()``, *plus*
- - If ``max_retries`` is reached
+TimeoutError
+""""""""""""
 
+- Same as for ``read()``, *plus*
+- If ``max_retries`` is reached
 

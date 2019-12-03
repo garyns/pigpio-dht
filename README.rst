@@ -112,32 +112,35 @@ read(retries=0) raises TimeoutError
 
 Take a single reading from the sensor.
 
-**Parameters:**
+Parameters
+^^^^^^^^^^
 
 - **retries** number of times to keep retrying when the result contains ``valid = False``
 
-**Returns:**
+Returns
+^^^^^^^
+A Dictionary in the form ``{'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}``
 
- A Dictionary in the form ``{'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}``
+Where:
 
- Where:
-  - **temp_c** is the temperature in degrees Celsius
-  - **temp_f** is the temperature in degrees Fahrenheit
-  - **humidity** is the relative humidity
-  - **valid** is true only if sensors checksum matches with returned data.
+- **temp_c** is the temperature in degrees Celsius
+- **temp_f** is the temperature in degrees Fahrenheit
+- **humidity** is the relative humidity
+- **valid** is true only if sensors checksum matches with returned data.
 
- **Discard readings where** ``value == False`` **and try again.**
+**Discard readings where** ``value == False`` **and try again.**
 
 
-**Raises:**
+Raises
+^^^^^^
+TimeoutError:
 
- TimeoutError:
-  - If the sensor on ``gpio`` does not respond
-  - If the sensor responds within ``timeout_secs`` (see _Constructor), but the response cannot be understood by the library. Tey increasing ``timeout_secs``
+- If the sensor on ``gpio`` does not respond
+- If the sensor responds within ``timeout_secs`` (see _Constructor), but the response cannot be understood by the library. Tey increasing ``timeout_secs``
 
-Also see:
-
- `DHT Sensors are Slow`_
+Also see
+^^^^^^^^
+`DHT Sensors are Slow`_
 
 .. _fn_sample:
 

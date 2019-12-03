@@ -67,7 +67,7 @@ Output
 Also see
 ^^^^^^^^
 
-  `read()`__
+`read()`__
 
 __ fn_read_
 
@@ -102,7 +102,7 @@ Output
 Also see
 ^^^^^^^^
 
-  `sample()`__
+`sample()`__
 
 __ fn_sample_
 
@@ -158,6 +158,7 @@ TimeoutError
 
 Also see
 ^^^^^^^^
+
 `DHT Sensors are Slow`_
 
 .. _fn_sample:

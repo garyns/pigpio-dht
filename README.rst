@@ -69,7 +69,7 @@ Also see
 
 `read()`__
 
-__ fnread_
+__ `read(retries=0) raises TimeoutError`_
 
 
 Sampled Read
@@ -104,7 +104,7 @@ Also see
 
 `sample()`__
 
-__ fnsample_
+__ `sample(samples=5, max_retries=None) raises TimeoutError`_
 
 API 
 ---
@@ -120,8 +120,6 @@ Parameters
 - **gpio** GPIO (BCM) pin that data leg of sensor is connected to
 - **timeout_secs** Sensor timeout in second. Default should be adequate unless you receive a TimeoutError advising you to increase the value wuth calling ``read()`` or ``sample()``
 - **pi** a custom instance of ``pigpio.pi()``
-
-.. _fnread:
 
 read(retries=0) raises TimeoutError
 ************************************
@@ -161,10 +159,8 @@ Also see
 
 `DHT Sensors are Slow`_
 
-.. _fnsample:
-
 sample(samples=5, max_retries=None) raises TimeoutError
-*************************************************************
+*******************************************************
 
 Take many readings (by repeating calling ``read()``) from the sensor and return a normalised result.
 

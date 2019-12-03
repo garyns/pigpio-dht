@@ -215,19 +215,25 @@ class DHTXX:
         bytes = []
         byte = 0
 
-        for i in range(0, len(self.data)):
-          byte = byte << 1
-          if (self.data[i]):
-            byte = byte | 1
-          else:
-            byte = byte | 0
+        for i in range(len(self.data)):
+            bit = self.data[i]
+            byte = (byte << 1) | bit
+            if ((i + 1) % 8 == 0):
+                bytes.append(byte)
+                byte = 0
 
-          if ((i + 1) % 8 == 0):
-            bytes.append(byte)
-            byte = 0
+#        for i in range(0, len(self.data)):
+#            byte = byte << 1
+#            if (self.data[i]):
+#             byte = byte | 1
+#            else:
+#              byte = byte | 0
+#  
+#            if ((i + 1) % 8 == 0):
+#                bytes.append(byte)
+#                byte = 0
 
         valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]
-        #valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3] & 255) == bytes[4]
 
         if DHTXX.DEBUG:
             print("len(data) =", len(self.data))

@@ -153,7 +153,7 @@ TimeoutError
 """"""""""""
 
 - If the sensor on ``gpio`` does not respond
-- If the sensor responds within ``timeout_secs`` (see _Constructor), but the response cannot be understood by the library. Tey increasing ``timeout_secs``
+- If the sensor responds within ``timeout_secs`` (see _Constructor), but the response cannot be understood by the library. Try increasing ``timeout_secs``
 
 Also see
 ^^^^^^^^

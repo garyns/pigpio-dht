@@ -1,5 +1,5 @@
 #from distutils.core import setup
-from setuptools import setup
+from setuptools import setup, find_packages
 import os.path
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -12,8 +12,9 @@ except IOError:
 setup(
   name = 'pigpio-dht', 
   packages = ['pigpio_dht'],
-  package_dir={'pigpio_dht':'src'},
-  version = '0.2.7', 
+  package_dir={'':'lib'},
+  #packages=find_packages(),
+  version = '0.2.8', 
   license = 'LGPL3', 
   description = 'DIT11 Temperature and Humidity Sensor using pigpio',
   long_description = README,

@@ -21,7 +21,7 @@ class DHTXX:
         :type gpio: Integer
         :param timeout_secs: sensor read timeout in seconds
         :type timeout_secs: integer
-        :param use_internal_pullup: use internal pull-up resistor on data gpio
+        :param use_internal_pullup: enable internal pull-up resistor on gpio
         :type use_internal_pullup: boolean
         :param pi: Custom instance of pigpio.pi()
         :type pi: pigpio

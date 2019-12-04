@@ -111,14 +111,15 @@ API
 
 The classes ``DHT11`` and ``DHT22`` both extend the base class ``DHTXX`` and share a common the API.
 
-Constructor: DHT11 | DHT22(gpio, timeout_secs=0.5, pi=None)
-************************************************************
+Constructor: DHT11 | DHT22(gpio, timeout_secs=0.5, use_internal_pullup=True, pi=None)
+*************************************************************************************
 
 Parameters
 ^^^^^^^^^^
 
 - **gpio** GPIO (BCM) pin that data leg of sensor is connected to
 - **timeout_secs** Sensor timeout in second. Default should be adequate unless you receive a TimeoutError advising you to increase the value wuth calling ``read()`` or ``sample()``
+- **use_internal_pullup** - Enable internal pull-up resistor on gpio
 - **pi** a custom instance of ``pigpio.pi()``
 
 read(retries=0) raises TimeoutError

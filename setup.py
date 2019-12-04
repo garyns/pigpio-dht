@@ -13,7 +13,7 @@ setup(
   name = 'pigpio-dht', 
   packages = ['pigpio_dht'],
   package_dir={'pigpio_dht':'src'},
-  version = '0.2.5', 
+  version = '0.2.6', 
   license = 'LGPL3', 
   description = 'DIT11 Temperature and Humidity Sensor using pigpio',
   long_description = README,

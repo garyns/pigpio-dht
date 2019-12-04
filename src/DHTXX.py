@@ -118,7 +118,7 @@ class DHTXX:
             if retries >= max_retries:
                 raise TimeoutError("Maximum retries of {} reached.".format(max_retries))
 
-        __debug("Retries:", retries)
+        _debug("Retries:", retries)
 
         # Temperature
         temp_sd = statistics.stdev(temperatures)
@@ -129,7 +129,7 @@ class DHTXX:
             temperatures_norm = [x for x in temperatures if (x > temp_mean - trim_sd * temp_sd)]
             temperatures_norm = [x for x in temperatures_norm if (x < temp_mean + trim_sd * temp_sd)]
 
-        __debug("temps, norm", temperatures, temperatures_norm)
+        _debug("temps, norm", temperatures, temperatures_norm)
 
         temp_mean = statistics.mean(temperatures_norm)
         temp_mode = None
@@ -138,7 +138,7 @@ class DHTXX:
         except:
             pass # no mode.        
         
-        __debug("temps, sd, mean, mode =", temperatures, temperatures_norm, temp_sd, temp_mean, temp_mode)
+        _debug("temps, sd, mean, mode =", temperatures, temperatures_norm, temp_sd, temp_mean, temp_mode)
         temp_c = temp_mode if temp_mode else temp_mean
         temp_c = round(temp_c, 1)
 
@@ -151,7 +151,7 @@ class DHTXX:
             humidities_norm = [x for x in humidities if (x > humidity_mean - trim_sd * humidity_sd)]
             humidities_norm = [x for x in humidities_norm if (x < humidity_mean + trim_sd * humidity_sd)]
 
-        __debug("humidities, norm", humidities, humidities_norm)
+        _debug("humidities, norm", humidities, humidities_norm)
 
         humidity_mean = statistics.mean(humidities_norm)
         humidity_mode = None
@@ -160,7 +160,7 @@ class DHTXX:
         except:
             pass # no mode.
 
-        __debug("humidities, sd, mean, mode =", humidities, humidities_norm, humidity_sd, humidity_mean, humidity_mode)
+        _debug("humidities, sd, mean, mode =", humidities, humidities_norm, humidity_sd, humidity_mean, humidity_mode)
         humidity = humidity_mode if humidity_mode else humidity_mean
         humidity = round(humidity, 1)
 
@@ -213,7 +213,7 @@ class DHTXX:
             print(elapsed_since_last_read)
             if (elapsed_since_last_read < self.__max_read_rate_secs):
                 pause_secs = self.__max_read_rate_secs - elapsed_since_last_read
-                __debug("Pausing for secs", pause_secs)
+                _debug("Pausing for secs", pause_secs)
                 sleep(pause_secs)
                     
         self.__edge_count = 0
@@ -238,9 +238,9 @@ class DHTXX:
 
         if DEBUG:
             elapsed_secs = (self.__c1 - self.__c0) / 1000000
-            __debug("Round Trip Secs:", elapsed_secs)
-            __debug("Sensor Response?", self.sensor_responded)
-            __debug("Read Success?", self.read_success)
+            _debug("Round Trip Secs:", elapsed_secs)
+            _debug("Sensor Response?", self.sensor_responded)
+            _debug("Read Success?", self.read_success)
 
         if not self.sensor_responded:
             raise TimeoutError("{} sensor on GPIO {} has not responded in {} seconds. Check sensor connection.".format(self.__class__.__name__, self.gpio, self.timeout_secs))
@@ -248,15 +248,17 @@ class DHTXX:
                 # note: self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT when self.read_success == True
                 raise TimeoutError("{} sensor on GPIO {} responded but the response invalid. Check sensor connection or try increasing timeout (currently {} seconds).".format(self.__class__.__name__, self.gpio, self.timeout_secs))
 
-        return self.__parse_data()
+        return self._parse_data()
 
 
-    def __parse_data(self):
+    def _parse_data(self):
         """
         Parse data data from sensor into temperature and humidity.
         :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
         :rtype: Dictionary
         """
+
+        assert(len(self.data) == DHTXX.EXPECTED_DATA_BITS)
 
         bytes = []
         byte = 0
@@ -268,36 +270,42 @@ class DHTXX:
                 bytes.append(byte)
                 byte = 0
 
-        valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]
+        assert(len(bytes) == 5)
 
         if DEBUG:
-            __debug("len(data) =", len(self.data))
-            __debug("data =", self.data)
-            __debug("bytes =", bytes)
+            _debug("len(data) =", len(self.data))
+            _debug("data =", self.data)
+            _debug("bytes =", bytes)
 
         humidity = 0
         temp_c = 0
         temp_f = 0
 
-        if valid:
+        print(bytes)
+        valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3]) & 255 == bytes[4]
 
-            if self.__datum_byte_count == 1:
-                # Data is single byte
-                temp_c = round(bytes[2])
-                temp_f = round((temp_c * 9/5) + 32, 1)
-                humidity = round(bytes[0], 1)
+        if self.__datum_byte_count == 1:
+            # Data is single byte, eg DHT11
+            temp_c = round(bytes[2])
+            temp_f = round((temp_c * 9/5) + 32, 1)
+            humidity = round(bytes[0], 1)
 
-            else:
-                # Data is 2 bytes
-                multiplier = 1  # Positive or negative temp multiplier
+        else:
+            # Data is 2 bytes, eg DHT22
+            multiplier = 1  # Positive or negative temp multiplier
 
-                if bytes[2] & 0b10000000:
-                    multiplier = -1
-                    bytes[2] = bytes[2] ^ 0b10000000
+            if bytes[2] & 0b10000000:
+                multiplier = -1
+                bytes[2] = bytes[2] ^ 0b10000000
 
-                temp_c =  round(multiplier * float(bytes[2] * 256 + bytes[3]) / 10, 1)
-                temp_f = round((temp_c * 9/5) + 32, 1)
-                humidity = round(float(bytes[0] * 256 + bytes[1]) / 10, 1)
+            temp_c =  round(multiplier * float(bytes[2] * 256 + bytes[3]) / 10, 1)
+            temp_f = round((temp_c * 9/5) + 32, 1)
+            humidity = round(float(bytes[0] * 256 + bytes[1]) / 10, 1)
+
+        if not valid:
+            humidity = 0
+            temp_c = 0
+            temp_f = 0
 
         return {'temp_c': temp_c,
                 'temp_f': temp_f,
@@ -313,18 +321,18 @@ class DHTXX:
         hl_text = "HIGH" if level == 1 else "LOW" # For debugging output.
 
         if self.__edge_count <= 1:
-          __debug(self.__edge_count, "RPI->DHT", "Request Data", hl_text)
+          _debug(self.__edge_count, "RPI->DHT", "Request Data", hl_text)
 
         elif self.__edge_count <= 3:
           self.sensor_responded = True
-          __debug(self.__edge_count, "RPI<-DHT", "Transmission Starting", hl_text)
+          _debug(self.__edge_count, "RPI<-DHT", "Transmission Starting", hl_text)
 
         elif self.__edge_count <= 4:
           # Initial data stream LOW
-          __debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
+          _debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
 
         elif self.__edge_count <= 84:
-          __debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
+          _debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
 
           elapsed = tick - self.__last_tick
           self.__last_tick = tick
@@ -334,7 +342,7 @@ class DHTXX:
               bit = 1 if elapsed >= 70 else 0
               self.data.append(bit)
 
-              __debug("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
+              _debug("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
 
         else:
           self.__edge_callback_fn.cancel()
@@ -347,8 +355,9 @@ class DHTXX:
         self.__edge_count += 1
 
 
-def __debug(**texts):
+def _debug(*texts):
     if not DEBUG:
         return
 
-    print(','.join(texts))
+    print(' '.join(str(t) for t in texts))
+

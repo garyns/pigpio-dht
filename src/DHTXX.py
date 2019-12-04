@@ -210,7 +210,7 @@ class DHTXX:
         # Throttle reads so we are not reading more than once per self.__max_read_rate_secs 
         if (self.__last_read_time): 
             elapsed_since_last_read = (datetime.now() - self.__last_read_time).microseconds / 1000000
-            print(elapsed_since_last_read)
+
             if (elapsed_since_last_read < self.__max_read_rate_secs):
                 pause_secs = self.__max_read_rate_secs - elapsed_since_last_read
                 _debug("Pausing for secs", pause_secs)
@@ -281,7 +281,6 @@ class DHTXX:
         temp_c = 0
         temp_f = 0
 
-        print(bytes)
         valid = (bytes[0] + bytes[1] + bytes[2] + bytes[3]) & 255 == bytes[4]
 
         if self.__datum_byte_count == 1:

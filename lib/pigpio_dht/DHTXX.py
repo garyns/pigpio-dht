@@ -217,6 +217,7 @@ class DHTXX:
                 sleep(pause_secs)
                     
         self.__edge_count = 0
+        self.__bit_count = 0
         self.read_success = False
         self.sensor_responded = False
         self.data = []
@@ -224,15 +225,17 @@ class DHTXX:
         self. __last_read_time = datetime.now()
         self.__c0 = self.__last_tick
 
+        self.__pi.set_mode(self.gpio, pigpio.OUTPUT)
+
         self.__edge_callback_fn = self.__pi.callback(self.gpio, pigpio.EITHER_EDGE, self.__edge_callback)
 
-        self.__pi.set_mode(self.gpio, pigpio.OUTPUT)
         self.__pi.write(self.gpio, pigpio.LOW)
         sleep(0.018)  # 18ms pause as per datasheet
         self.__pi.write(self.gpio, pigpio.HIGH)
 
         self.__pi.set_mode(self.gpio, pigpio.INPUT)
 
+        # Sleep while __edge_callback is called.
         sleep(self.timeout_secs)
         self.__edge_callback_fn.cancel()
 
@@ -244,9 +247,9 @@ class DHTXX:
 
         if not self.sensor_responded:
             raise TimeoutError("{} sensor on GPIO {} has not responded in {} seconds. Check sensor connection.".format(self.__class__.__name__, self.gpio, self.timeout_secs))
-        elif not self.read_success:
-                # note: self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT when self.read_success == True
-                raise TimeoutError("{} sensor on GPIO {} responded but the response was invalid. Check sensor connection or try increasing timeout (currently {} seconds).".format(self.__class__.__name__, self.gpio, self.timeout_secs))
+        ##elif not self.read_success:
+        ##        # note: self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT when self.read_success == True
+        ##        raise TimeoutError("{} sensor on GPIO {} responded but the response was invalid. Check sensor connection or try increasing timeout (currently {} seconds).".format(self.__class__.__name__, self.gpio, self.timeout_secs))
 
         return self._parse_data()
 
@@ -257,7 +260,7 @@ class DHTXX:
         :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
         :rtype: Dictionary
         """
-
+        print(len(self.data)) ##GS##
         assert(len(self.data) == DHTXX.EXPECTED_DATA_BITS)
 
         bytes = []
@@ -343,12 +346,14 @@ class DHTXX:
 
               _debug("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
 
-        else:
+        else: # edge 85
           self.__edge_callback_fn.cancel()
           self.read_success = len(self.data) == DHTXX.EXPECTED_DATA_BITS
           self.__c1 = self.__pi.get_current_tick()
-          assert(level == pigpio.HIGH)  # GPIO is high when transmission is complete (sensor 'free' state per datasheet)
-          assert(self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT-1)
+          print("Edge Count", self.__edge_count)
+          print("Data Bits", len(self.data))
+          #assert(level == pigpio.HIGH)  # GPIO is high when transmission is complete (sensor 'free' state per datasheet)
+          #assert(self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT-1)
 
         self.__last_tick = tick
         self.__edge_count += 1
@@ -357,6 +362,5 @@ class DHTXX:
 def _debug(*texts):
     if not DEBUG:
         return
-
     print(' '.join(str(t) for t in texts))
 

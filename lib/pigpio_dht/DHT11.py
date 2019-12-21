@@ -23,7 +23,6 @@ class DHT11(DHTXX):
         # for DHT11 datum_byte_count = 1, max_read_rate_secs = 1
         super(DHT11, self).__init__(gpio, pi=pi, timeout_secs=timeout_secs, use_internal_pullup=True, max_read_rate_secs=1, datum_byte_count=1)
 
-
 if __name__ == "__main__":
 
     if len(sys.argv) == 2:

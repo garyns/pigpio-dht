@@ -96,6 +96,7 @@ class DHTXX:
         if max_retries is None:
             max_retries = samples * 2
 
+        sample_num = 0
         trim_sd = 1  # Number of standard deviations to trim.
         retries = 0
         temperatures = []
@@ -103,6 +104,8 @@ class DHTXX:
         initial_result = None  # For debugging and testing results.
 
         while len(temperatures) < samples:
+            sample_num += 1
+            _debug("--- SAMPLE {} ----".format(sample_num)) 
             result = self.read(retries=0)
 
             if (len(temperatures) == 0):
@@ -222,17 +225,15 @@ class DHTXX:
         self.sensor_responded = False
         self.data = []
         self.__last_tick = self.__pi.get_current_tick()
-        self. __last_read_time = datetime.now()
+        self.__last_read_time = datetime.now()
         self.__c0 = self.__last_tick
-
-        self.__pi.set_mode(self.gpio, pigpio.OUTPUT)
 
         self.__edge_callback_fn = self.__pi.callback(self.gpio, pigpio.EITHER_EDGE, self.__edge_callback)
 
+        self.__pi.set_mode(self.gpio, pigpio.OUTPUT)
         self.__pi.write(self.gpio, pigpio.LOW)
         sleep(0.018)  # 18ms pause as per datasheet
-        self.__pi.write(self.gpio, pigpio.HIGH)
-
+        #No! self.__pi.write(self.gpio, pigpio.HIGH)
         self.__pi.set_mode(self.gpio, pigpio.INPUT)
 
         # Sleep while __edge_callback is called.
@@ -241,15 +242,17 @@ class DHTXX:
 
         if DEBUG:
             elapsed_secs = (self.__c1 - self.__c0) / 1000000
+            _debug("Edge Count", self.__edge_count)
+            _debug("Data Length", len(self.data))
             _debug("Round Trip Secs:", elapsed_secs)
             _debug("Sensor Response?", self.sensor_responded)
             _debug("Read Success?", self.read_success)
 
         if not self.sensor_responded:
             raise TimeoutError("{} sensor on GPIO {} has not responded in {} seconds. Check sensor connection.".format(self.__class__.__name__, self.gpio, self.timeout_secs))
-        ##elif not self.read_success:
-        ##        # note: self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT when self.read_success == True
-        ##        raise TimeoutError("{} sensor on GPIO {} responded but the response was invalid. Check sensor connection or try increasing timeout (currently {} seconds).".format(self.__class__.__name__, self.gpio, self.timeout_secs))
+        elif not self.read_success:
+                # note: self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT when self.read_success == True
+                raise TimeoutError("{} sensor on GPIO {} responded but the response was invalid. Check sensor connection or try increasing timeout (currently {} seconds).".format(self.__class__.__name__, self.gpio, self.timeout_secs))
 
         return self._parse_data()
 
@@ -260,8 +263,6 @@ class DHTXX:
         :return: Sensor data like {'temp_c': 20, 'temp_f': 68.0, 'humidity': 35, 'valid': True}
         :rtype: Dictionary
         """
-        print(len(self.data)) ##GS##
-        assert(len(self.data) == DHTXX.EXPECTED_DATA_BITS)
 
         bytes = []
         byte = 0
@@ -331,7 +332,7 @@ class DHTXX:
 
         elif self.__edge_count <= 4:
           # Initial data stream LOW
-          _debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
+          _debug(self.__edge_count, "RPI<-DHT", "Data (Initial LOW)", hl_text)
 
         elif self.__edge_count <= 84:
           _debug(self.__edge_count, "RPI<-DHT", "Data", hl_text)
@@ -340,21 +341,19 @@ class DHTXX:
           self.__last_tick = tick
 
           if level == 0:
-              self.__bit_count += 1
               bit = 1 if elapsed >= 70 else 0
               self.data.append(bit)
-
               _debug("  Elapsed microseconds={}, so data[{}]={}".format(elapsed, self.__bit_count, bit));
-
-        else: # edge 85
+              self.__bit_count += 1
+              
+        else:
+          _debug(self.__edge_count, "RPI<-DHT", "Data (Transmiation Complete)", hl_text)
           self.__edge_callback_fn.cancel()
           self.read_success = len(self.data) == DHTXX.EXPECTED_DATA_BITS
           self.__c1 = self.__pi.get_current_tick()
-          print("Edge Count", self.__edge_count)
-          print("Data Bits", len(self.data))
-          #assert(level == pigpio.HIGH)  # GPIO is high when transmission is complete (sensor 'free' state per datasheet)
-          #assert(self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT-1)
-
+          assert(level == pigpio.HIGH)  # GPIO is high when transmission is complete (sensor 'free' state per datasheet)
+          assert(self.__edge_count == DHTXX.SUCCESS_EDGE_COUNT-1) # -1 because __edge_count += 1 below.
+          
         self.__last_tick = tick
         self.__edge_count += 1
 

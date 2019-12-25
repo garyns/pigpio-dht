@@ -16,7 +16,7 @@ Supported Versions of Python
 
 Tested against Python >= 3.5.
 
-It may work with other earlier versions but this has not been confirmed.
+May work with earlier 3.X versions but this has not been confirmed. Does not work with Python 2.7.
 
 Links
 -----

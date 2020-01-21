@@ -6,10 +6,14 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def dht11gpio(request):
-    return request.config.getoption("dht11gpio")
+    gpio = request.config.getoption("dht11gpio")
+    if gpio:
+      return int(gpio)
 
 @pytest.fixture
 def dht22gpio(request):
-    return request.config.getoption("dht22gpio")
+    gpio = request.config.getoption("dht22gpio")
+    if gpio:
+      return int(gpio)
 
 

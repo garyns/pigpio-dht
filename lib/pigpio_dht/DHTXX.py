@@ -237,7 +237,11 @@ class DHTXX:
         self.__pi.set_mode(self.gpio, pigpio.INPUT)
 
         # Sleep while __edge_callback is called.
-        sleep(self.timeout_secs)
+        timer = 0
+        while timer < self.timeout_secs:
+            timer += 0.01
+            sleep(0.01)
+
         self.__edge_callback_fn.cancel()
 
         if DEBUG:

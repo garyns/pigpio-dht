@@ -44,8 +44,10 @@ def count(gpio):
     
     pi.set_mode(gpio, pigpio.INPUT)
 
-    sleep(timeout_secs) # Timeout
-    print("Timeout")
+    timer = 0
+    while timer < timeout_secs:
+        timer += 0.01
+        sleep(0.01)
 
     edge_callback_fn.cancel()
     print("Edge Count", edge_count)

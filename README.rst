@@ -109,7 +109,7 @@ __ `sample(samples=5, max_retries=None) raises TimeoutError`_
 API 
 ---
 
-The classes ``DHT11`` and ``DHT22`` both extend the base class ``DHTXX`` and share a common the API.
+The classes ``DHT11`` and ``DHT22`` both extend the base class ``DHTXX`` and share a common API.
 
 Constructor: DHT11 | DHT22(gpio, timeout_secs=0.5, use_internal_pullup=True, pi=None)
 *************************************************************************************

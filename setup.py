@@ -19,7 +19,7 @@ setup(
   description = 'DHT11 & DHT22 Temperature and Humidity Sensor using pigpio',
   long_description = README,
   long_description_content_type = 'text/x-rst',
-  author = 'Gary Smart',
+  #author = 'Gary Smart',
   #author_email = "gary#at#smart-itc#dot#com#dot#au",
   url = 'https://github.com/garyns/pigpio-dht',
   download_url = 'https://github.com/garyns/pigpio-dht/archive/master.zip',

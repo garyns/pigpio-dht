@@ -47,6 +47,7 @@ Take a single reading from the sensor.
 Code
 ^^^^
 ::
+
   # NOTE: The import has a _ not - in the module name.
   from pigpio_dit import DHT11, DHT22
 

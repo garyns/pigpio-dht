@@ -49,7 +49,7 @@ Code
 ::
 
   # NOTE: The import has a _ not - in the module name.
-  from pigpio_dit import DHT11, DHT22
+  from pigpio_dht import DHT11, DHT22
 
   gpio = 21 # BCM Numbering
 
@@ -84,7 +84,7 @@ Code
 ::
 
   #  NOTE: The import has a _ not - in the module name.
-  from pigpio_dit import DHT11, DHT22
+  from pigpio_dht import DHT11, DHT22
 
   gpio = 21 # BCM Numbering
 

@@ -44,13 +44,3 @@ def test_dht22(dht22gpio):
     assert 'humidity' in result
     assert 'valid' in result
     assert 0 <= result['humidity'] <= 100
-
-def WIP_comp_readings():
-
-    if not dht11_result or not dht22_result:
-        pytest.skip("Skipping. Both DHT11 and DHT22 results not available.")
-
-    humidity_diff = abs(dht22_result['humidity'] - dht11_result['humidity'])
-    temp_dif      = abs(dht22_result['temp_c'] - dht11_result['temp_c'])
-
-    

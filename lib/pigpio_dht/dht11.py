@@ -1,4 +1,4 @@
-from .DHTXX import DHTXX
+from .dhtxx import DHTXX
 import sys
 
 """
